@@ -1,5 +1,6 @@
 #include "myfs.h"
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char const *argv[])
 {
@@ -8,17 +9,16 @@ int main(int argc, char const *argv[])
     printf("syncing..\n");
     sync();  // writing it into an actual file
     printf("printing..\n");
-    printfs("fs_data.txt"); // read from the file and print to terminal
     printf("allocating a file..\n");
-    allocate_file("test"); // just allocated an inode and a first block to a file named test
-    allocate_file("test2");
-    printf("printing..\n"); 
-    printfs("fs_data.txt"); // print, but without syncing so you won't see the change
-    printf("syncing..\n");
-    sync(); // writing it into an actual file
-    printf("printing..\n"); 
-    printfs("fs_data.txt"); // now you can see the change
-
+    char * test = "abcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuz";
+    int fd = allocate_file(strlen(test), "test"); // just allocated an inode and a first block to a file named test
+    printfs_mem("fs_data.txt"); // read from the file and print to terminal
+    for (size_t i = 0; i < strlen(test); i++)
+    {
+        writebyte(fd, i, test[i]);
+    }
+    printfd(fd);
+    
     printf("done!\n");
     return 0;
 }

@@ -1,31 +1,3 @@
-
-
-
-/*
-struct super_block {
-    int inodes;
-    int blocks;
-    // int size_blocks; = BLOCK_SIZE?
-
-};
-struct disk_block {
-    int next;
-    char data[BLOCK_SIZE];
-
-};
-struct inode {
-    int next;
-    char name[NAME_SIZE];
-};
-typedef struct myDIR{ // == FILE for directories
-
-}myDIR;
-
-
-struct mydirent { // 
-
-};
-*/
 #include "myfs.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,7 +42,7 @@ void sync() {
     fclose(file);
 }
 
-void printfs(char* target) {
+void printfs_dsk(char* target) {
     FILE *file;
     file = fopen(target, "r");
     struct super_block temp_super_block;
@@ -80,7 +52,7 @@ void printfs(char* target) {
     fread(temp_inodes, temp_super_block.inodes*sizeof(struct inode), 1, file);
     fread(temp_disk_blocks, temp_super_block.blocks*sizeof(struct disk_block), 1, file);
     printf("SUPERBLOCK\n");
-    printf("\t inodes amount: %d\n\t blocks amount: %d\n", super_block.inodes, super_block.blocks);
+    printf("\t inodes amount: %d\n\t blocks amount: %d\n", temp_super_block.inodes, temp_super_block.blocks);
     printf("\nINODES\n");
     for (size_t i = 0; i < temp_super_block.inodes; i++)
     {
@@ -97,6 +69,22 @@ void printfs(char* target) {
     fclose(file);
     free(temp_disk_blocks); 
     free(temp_inodes);
+}
+
+void printfs_mem() {
+    printf("SUPERBLOCK\n");
+    printf("\t inodes amount: %d\n\t blocks amount: %d\n", super_block.inodes, super_block.blocks);
+    printf("\nINODES\n");
+    for (size_t i = 0; i < super_block.inodes; i++)
+    {
+        printf("%ld.\t name: %s | next: %d\n",i , inodes[i].name, inodes[i].next);
+    }
+
+    printf("\nBLOCKS\n");
+    for (size_t i = 0; i < super_block.blocks; i++)
+    {
+        printf("%ld.\t next: %d\n",i , disk_blocks[i].next);
+    }
 }
 
 int find_empty_inode() {
@@ -120,8 +108,7 @@ int find_empty_block() {
     return -1;
 }
 
-int allocate_file(char* name) {
-
+int allocate_file(int size, char* name) {
     if (strlen(name)>7) {
         printf("name of file too long\n");
         exit(EXIT_FAILURE);
@@ -131,18 +118,60 @@ int allocate_file(char* name) {
         printf("no empty inode\n");
         exit(EXIT_FAILURE);
     }
-    int first_block = find_empty_block();
-    if (first_block == -1) {
+    int curr_block = find_empty_block();
+    if (curr_block == -1) {
         printf("no empty blocks\n");
         exit(EXIT_FAILURE);
     }
-    inodes[inode].next = first_block;
-    disk_blocks[first_block].next = -2; 
+    inodes[inode].next = curr_block;
+    disk_blocks[curr_block].next = -2; 
     strcpy(inodes[inode].name, name);
 
+    int bn = size/BLOCK_SIZE;
+    int next_block;
+    for (size_t i = 0; i < bn; i++)
+    {
+        next_block = find_empty_block();
+        if (next_block == -1) {
+            printf("no empty blocks\n");
+            exit(EXIT_FAILURE);
+        }
+        disk_blocks[curr_block].next = next_block;
+        curr_block = next_block;
+    }
+    disk_blocks[curr_block].next = -2;
+
+    
     return inode; // is this the right number to send back?
 }
 
+void writebyte(int fd, int pos, char data) { // write only ONE byte into the block
+    int rb = inodes[fd].next;
+    while (pos>=BLOCK_SIZE) {
+        pos-=512;
+        rb = disk_blocks[rb].next;
+        if (rb==-2||rb==-1) {
+            printf("ERROR");
+            exit(EXIT_FAILURE);
+        }
+    }
+    disk_blocks[rb].data[pos] = data;
+}
+
+void printfd(int fd){
+    int rb = inodes[fd].next;
+    printf("NAME: %s\n", inodes[fd].name);
+
+    while(rb!=-2) {
+        if (rb==-1) {
+            printf("ERROR\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("%s", disk_blocks[rb].data);
+        rb = disk_blocks[rb].next;
+    }
+    printf("\nDONE %s\n", inodes[fd].name);
+}
 
 int mymount(const char *source, const char *target, const char *filesystemtype, unsigned long mountflags, const void *data) {
     

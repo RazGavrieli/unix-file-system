@@ -33,12 +33,24 @@ struct mydirent { //
 
 };
 
+// creates a new fs with the given size
+void mymkfs(int); 
+// writes the fs that is currently on the memory into an actual file
+void sync(); 
+// prints the fs from the disk (from a given file name)
+void printfs_dsk(char*); 
+// printfs the fs from the memory
+void printfs_mem(); 
+// allocates a new file with a given size and name (allocates inode and blocks)
+int allocate_file(int , char*); 
+// write only ONE char into the block
+void writebyte(int , int, char); 
+// print a file from our fs
+void printfd(int); 
 
-void mymkfs(int);
-void sync();
-void printfs(char*);
-int allocate_file(char*);
 
+
+// wtf: 
 int mymount(const char *source, const char *target, const char *filesystemtype, unsigned long mountflags, const void *data);
 int myopen(const char *pathname, int flags);
 int myclose(int myfd);
