@@ -5,20 +5,21 @@
 int main(int argc, char const *argv[])
 {
     printf("cerating..\n");
-    mymkfs(10000); // 10000 size
-    printf("syncing..\n");
-    sync();  // writing it into an actual file
-    printf("printing..\n");
-    printf("allocating a file..\n");
-    char * test = "abcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuzabcdefghijklmnopqrstuvwxuz";
-    int fd = allocate_file(strlen(test), "test"); // just allocated an inode and a first block to a file named test
-    printfs_mem("fs_data.txt"); // read from the file and print to terminal
-    for (size_t i = 0; i < strlen(test); i++)
-    {
-        writebyte(fd, i, test[i]);
-    }
-    printfd(fd);
-    
-    printf("done!\n");
+    mymkfs(100000); 
+    myopendir("root/test");
+    myopendir("root/test3");
+    int fd = myopen("root/test/newfile", NULL);
+    int fd2 = myopen("root/test/newfil1", NULL);
+    printdir("root");
+    printdir("test");
+    printdir("test3");
+
+    char* test = "this is a test"; 
+    int ptr =  mywrite(fd, test, 25);
+    char buf[25];
+    mylseek(fd, -25, SEEK_CUR);
+    myread(fd, buf, 25);
+    printf("%s", buf);
+    myclose(fd);
     return 0;
 }
