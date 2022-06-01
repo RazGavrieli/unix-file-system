@@ -10,6 +10,10 @@ struct inode *inodes;
 struct disk_block *disk_blocks;
 
 void mymkfs(int s) {
+    /**
+     * @brief Load into the memory a fresh 'install' of a ufs. (UNIX FILE SYSTEM)
+     * The install will only include a root directory
+     */
     virtual_disk_size = s;
     int size_without_superblock = s - sizeof(struct super_block);
 
@@ -38,6 +42,11 @@ void mymkfs(int s) {
 }
 
 void createroot() {
+    /**
+     * @brief Creates a root directory at inode 0. 
+     * If inode 0 is not empty an exit failure will occur.
+     * 
+     */
     int zerofd = allocate_file(sizeof(struct mydirent),  "root");
     if (zerofd != 0 ) {
         perror("root couldn't initialize at zero");
@@ -58,6 +67,10 @@ void createroot() {
     free(rootdir);
 }
 void sync(const char* target) {
+    /**
+     * @brief Will load the UFS that is currently on the memory into a file named target.
+     *  The file could be loaded in the future using resync.
+     */
     FILE *file;
     file = fopen(target, "w+");
     fwrite(&super_block, sizeof(struct super_block), 1, file);
@@ -67,6 +80,10 @@ void sync(const char* target) {
 }
 
 void resync(const char* target) {
+    /**
+     * @brief Load a UFS from a file into the memory. 
+     * This won't work for a file that was not created using this library!!
+     */
     FILE *file;
     file = fopen(target, "r");
     fread(&super_block, sizeof(super_block), 1, file);
@@ -79,6 +96,9 @@ void resync(const char* target) {
 }
 
 void printfs_dsk(char* target) {
+    /**
+     * @brief Function used for debugging, print information about the UFS from a file on the disk.
+     */
     FILE *file;
     file = fopen(target, "r");
     struct super_block temp_super_block;
@@ -108,6 +128,9 @@ void printfs_dsk(char* target) {
 }
 
 void printfs_mem() {
+    /**
+     * @brief Function used for debugging, print information about the UFS from memory.
+     */
     printf("SUPERBLOCK\n");
     printf("\t inodes amount: %d\n\t blocks amount: %d\n", super_block.inodes, super_block.blocks);
     printf("\nINODES\n");
@@ -124,6 +147,9 @@ void printfs_mem() {
 }
 
 int find_empty_inode() {
+    /**
+     * @brief returns the first inode that is empty. 
+     */
     for (size_t i = 0; i < super_block.inodes; i++)
     {
         if (inodes[i].next == -1) {
@@ -135,6 +161,9 @@ int find_empty_inode() {
     return -1;
 }
 int find_empty_block() {
+    /**
+     * @brief returns the first block that is empty. 
+     */
     for (size_t i = 0; i < super_block.blocks; i++)
     {
         if (disk_blocks[i].next == -1) {
@@ -145,6 +174,11 @@ int find_empty_block() {
 }
 
 int allocate_file(int size, const char* name) {
+    /**
+     * @brief This function will allocate new inode and enough blocks for a new file. 
+     * (One inode is allocated, the amount of needed blocks is calculated)
+     * 
+     */
     if (strlen(name)>7) {
         perror("name of file too long\n");
         exit(EXIT_FAILURE);
@@ -184,7 +218,12 @@ int allocate_file(int size, const char* name) {
     return inode; 
 }
 
-void writebyte(int fd, int pos, char data) { // write only ONE byte into the block
+void writebyte(int fd, int pos, char data) { 
+    /**
+     * @brief Write a SINGLE byte into a disk block. 
+     * The function calculates the correct relevant block (rb) that is needed to be accessed. 
+     * 
+     */
     int rb = inodes[fd].next;
     while (pos>=BLOCK_SIZE) {
         pos-=BLOCK_SIZE;
@@ -198,6 +237,11 @@ void writebyte(int fd, int pos, char data) { // write only ONE byte into the blo
 }
 
 char readbyte(int fd, int pos) {
+    /**
+     * @brief Read a SINGLE byte from a disk block. 
+     * The function calculates the correct relevant block (rb) that is needed to be accessed. 
+     * The single byte is @return 'ed.
+     */
     int rb = inodes[fd].next;
     while (pos>=BLOCK_SIZE) {
         pos-=BLOCK_SIZE;
@@ -211,6 +255,9 @@ char readbyte(int fd, int pos) {
 }
 
 void printfd(int fd){
+    /**
+     * @brief Function used for debugging, attempts to print content of a given fd.
+     */
     int rb = inodes[fd].next;
     printf("NAME: %s\n", inodes[fd].name);
 
@@ -226,6 +273,9 @@ void printfd(int fd){
 }
 
 void printdir(const char* pathname) {
+    /**
+     * @brief Function used for debugging, print information about a directory with a given apth.
+     */
     int fd = myopendir(pathname);
     if (inodes[fd].dir==0) {
         perror("given path is not a dir!");
@@ -241,6 +291,12 @@ void printdir(const char* pathname) {
 }
 
 int mymount(const char *source, const char *target, const char *filesystemtype, unsigned long mountflags, const void *data) {
+    /**
+     * @brief This function is used to automatically load or install a UFS.
+     * If a source is given it will load the source into the memory.
+     * If a target is given it will save the current UFS that is on the memory into the disk.
+     * 
+     */
     if (source==NULL&&target==NULL) {
         perror("bad use of 'mymount', please specify AT LEAST one of the pair: target or source");
         exit(EXIT_FAILURE);
@@ -251,6 +307,10 @@ int mymount(const char *source, const char *target, const char *filesystemtype, 
         {sync(target);}
 }
 int mycreatefile(const char *path, const char* name) {
+    /**
+     * @brief Creates a new file at the given path with the given name.
+     * Assign a single block for it. 
+     */
     int newfd = allocate_file(BLOCK_SIZE-50, name);
     int dirfd = myopendir(path);
     struct mydirent *currdir = myreaddir(dirfd);
@@ -259,6 +319,10 @@ int mycreatefile(const char *path, const char* name) {
 }
 
 int myopen(const char *pathname, int flags) {
+    /**
+     * @brief Open a file at the given path.
+     * The opened file will be added into 'openfiles' struct array and this instance will be used to get the pointer of the file.
+     */
     char str[80];
     strcpy(str, pathname);
     char *token;
@@ -291,17 +355,28 @@ int myopen(const char *pathname, int flags) {
     return i;
 }
 int myclose(int myfd) {
+    /**
+     * @brief Removes the file from openfiles array
+     * 
+     */
     openfiles[myfd].fd = -1;
     openfiles[myfd].pos = -1;
 }
 
 size_t myread(int myfd, void *buf, size_t count) {
-
+    /**
+     * @brief Read a chunk of bytes from the given file into @param buf.
+     * @return the current position of the file pointer. 
+     * 
+     */
     if (inodes[myfd].dir==1) {
         perror("cant read a directory like a file");
         exit(EXIT_FAILURE);
     }
-
+    if (openfiles[myfd].fd != myfd) { 
+        perror("File is not open");
+        exit(EXIT_FAILURE);
+    }
     char* buffer = malloc(count);
     for (size_t i = 0; i < count; i++)
     {
@@ -316,8 +391,17 @@ size_t myread(int myfd, void *buf, size_t count) {
 }
 
 size_t mywrite(int myfd, const void *buf, size_t count) {
+    /**
+     * @brief Write a chunk of bytes from the given @param buf into fd myfd.
+     * @return the current position of the file pointer. 
+     * 
+     */
     if (inodes[myfd].dir==1) {
         perror("cant write into a directory like a file");
+        exit(EXIT_FAILURE);
+    }
+    if (openfiles[myfd].fd != myfd) { 
+        perror("File is not open");
         exit(EXIT_FAILURE);
     }
     char* buffer = (char*)buf;
@@ -329,6 +413,10 @@ size_t mywrite(int myfd, const void *buf, size_t count) {
     return openfiles[myfd].pos;
 }
 int mylseek(int myfd, int offset, int whence) {
+    /**
+     * @brief This function is used to move the file pointer. 
+     * 
+     */
     if (openfiles[myfd].fd != myfd) {
         perror("file is not opened");
         exit(EXIT_FAILURE);
@@ -398,7 +486,7 @@ int myopendir(const char *pathname) {
     strcpy(str, pathname);
     char *token;
     const char s[2] = "/";
-    token = strtok(str, s); // may not work with const 
+    token = strtok(str, s); 
     char currpath[NAME_SIZE] = "";
     char lastpath[NAME_SIZE] = "";
     while(token != NULL ) {          
@@ -423,6 +511,10 @@ int myopendir(const char *pathname) {
 
 
 struct mydirent *myreaddir(int fd) {
+    /**
+     * @brief Uses @param fd to find the asked directory and @return it as a @struct mydirent. 
+     * 
+     */
     if (inodes[fd].dir!=1) {
         perror("given fd is not a directory");
         exit(EXIT_FAILURE);
@@ -431,6 +523,7 @@ struct mydirent *myreaddir(int fd) {
 }
 
 int myclosedir(int fd) {
+    /** Raise error as it was not implemented in this file system. */
     perror("was not implemented, not relevant in my implementation method of ufs");
     exit(EXIT_FAILURE);
 }
