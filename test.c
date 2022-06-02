@@ -7,7 +7,7 @@ void red() {
 }
 
 void green() {
-    printf("\033[1;36m");
+    printf("\033[1;32m");
 }
 
 void white() {
