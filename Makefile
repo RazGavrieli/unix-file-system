@@ -1,9 +1,9 @@
-CC=gcc -fPIC
+CC=gcc -fPIC -g 
 
 all: libmyfs.so test
 
 libmyfs.so: myfs.o
-	$(CC) --shared -fPIC -pthread myfs.o -o libmyfs.so
+	$(CC) --shared -fPIC -g -pthread myfs.o -o libmyfs.so
 
 myfs.o: myfs.c
 	$(CC) myfs.c -c 
