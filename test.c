@@ -12,9 +12,9 @@ int main(int argc, char const *argv[])
     int t = (t1 == t2);
     if(t == 1)
     {
-        printf("test myopendir PASSED\n");
+        printf("myopendir test PASSED\n");
     }else{
-        printf("test myopendir FAILED\n");
+        printf("myopendir test FAILED\n");
     }
 
 
