@@ -224,10 +224,13 @@ void writebyte(int fd, int pos, char data) {
      * The function calculates the correct relevant block (rb) that is needed to be accessed. 
      * 
      */
-    int rb = inodes[fd].next;
-    while (pos>=BLOCK_SIZE) {
-        pos-=BLOCK_SIZE;
-        rb = disk_blocks[rb].next;
+    int rb = inodes[fd].next; // the next inode index for the file
+    if (pos>=BLOCK_SIZE) {
+        rb = find_empty_block();
+
+
+        pos= pos - BLOCK_SIZE;
+        // disk_blocks[rb].next = rb ;
         if (rb==-2||rb==-1) {
             perror("ERROR");
             exit(EXIT_FAILURE);
@@ -242,10 +245,22 @@ char readbyte(int fd, int pos) {
      * The function calculates the correct relevant block (rb) that is needed to be accessed. 
      * The single byte is @return 'ed.
      */
-    int rb = inodes[fd].next;
-    while (pos>=BLOCK_SIZE) {
-        pos-=BLOCK_SIZE;
-        rb = disk_blocks[rb].next;
+    // int rb = inodes[fd].next;
+    // while (pos>=BLOCK_SIZE) {
+    //     pos-=BLOCK_SIZE;
+    //     // rb = disk_blocks[rb].next;
+    //     if (rb==-2||rb==-1) {
+    //         perror("ERROR");
+    //         exit(EXIT_FAILURE);
+    //     }
+    // }
+    int rb = inodes[fd].next; // the next inode index for the file
+    if (pos>=BLOCK_SIZE) {
+        rb = find_empty_block();
+
+
+        pos= pos - BLOCK_SIZE;
+        // disk_blocks[rb].next = rb ;
         if (rb==-2||rb==-1) {
             perror("ERROR");
             exit(EXIT_FAILURE);
@@ -258,16 +273,23 @@ void printfd(int fd){
     /**
      * @brief Function used for debugging, attempts to print content of a given fd.
      */
+    if(openfiles[fd].fd == -1)
+    {
+        perror("segmentation error");
+        exit(EXIT_FAILURE);
+    }
     int rb = inodes[fd].next;
     printf("NAME: %s\n", inodes[fd].name);
-
+    
     while(rb!=-2) {
         if (rb==-1) {
             perror("fatal error got into an unallocated disk block\n");
             exit(EXIT_FAILURE);
         }
         printf("%s", disk_blocks[rb].data);
+
         rb = disk_blocks[rb].next;
+
     }
     printf("\nDONE %s\n", inodes[fd].name);
 }
@@ -281,11 +303,11 @@ void printdir(const char* pathname) {
         perror("given path is not a dir!");
         exit(EXIT_FAILURE);
     }
-    printf("NAME: %s\n", inodes[fd].name);
+    printf("NAME OF DIRECTORY: %s\n", inodes[fd].name);
     struct mydirent* currdir = (struct mydirent*)disk_blocks[inodes[fd].next].data;
     for (size_t i = 0; i < currdir->size; i++)
     {
-        printf("%s, ", inodes[currdir->fds[i]].name);
+        printf("file number %ld: %s, ",i, inodes[currdir->fds[i]].name);
     }
     printf("\nDONE\n");
 }
