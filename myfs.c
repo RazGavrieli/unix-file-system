@@ -222,16 +222,21 @@ void writebyte(int fd, int pos, char data) {
     /**
      * @brief Write a SINGLE byte into a disk block. 
      * The function calculates the correct relevant block (rb) that is needed to be accessed. 
-     * 
+     * if the position that is needed to be wrriten is out of the bounds of the file,
+     * allocate a new disk block for it. 
      */
-    int rb = inodes[fd].next; // the next inode index for the file
-    if (pos>=BLOCK_SIZE) {
-        rb = find_empty_block();
-        pos= pos - BLOCK_SIZE;
-        // disk_blocks[rb].next = rb ;
-        if (rb==-2||rb==-1) {
+    int rb = inodes[fd].next;
+    while (pos>=BLOCK_SIZE) {
+        pos-=BLOCK_SIZE;
+        if (disk_blocks[rb].next==-1) {
             perror("ERROR");
             exit(EXIT_FAILURE);
+        } else if (disk_blocks[rb].next == -2) { // the current block is the last block, so we allocate a new block
+            disk_blocks[rb].next = find_empty_block(); 
+            rb = disk_blocks[rb].next;
+            disk_blocks[rb].next = -2; 
+        } else {
+            rb = disk_blocks[rb].next;
         }
     }
     disk_blocks[rb].data[pos] = data;
@@ -243,22 +248,15 @@ char readbyte(int fd, int pos) {
      * The function calculates the correct relevant block (rb) that is needed to be accessed. 
      * The single byte is @return 'ed.
      */
-    // int rb = inodes[fd].next;
-    // while (pos>=BLOCK_SIZE) {
-    //     pos-=BLOCK_SIZE;
-    //     // rb = disk_blocks[rb].next;
-    //     if (rb==-2||rb==-1) {
-    //         perror("ERROR");
-    //         exit(EXIT_FAILURE);
-    //     }
-    // }
-    int rb = inodes[fd].next; // the next inode index for the file
-    if (pos>=BLOCK_SIZE) {
-        rb = find_empty_block();
-        pos= pos - BLOCK_SIZE;
-        // disk_blocks[rb].next = rb ;
-        if (rb==-2||rb==-1) {
+    int rb = inodes[fd].next;
+    while (pos>=BLOCK_SIZE) {
+        pos-=BLOCK_SIZE;
+        rb = disk_blocks[rb].next;
+        if (rb==-1) {
             perror("ERROR");
+            exit(EXIT_FAILURE);
+        } else if (rb == -2) {
+            perror("attempting to read out of file bounds");
             exit(EXIT_FAILURE);
         }
     }
@@ -395,14 +393,16 @@ size_t myread(int myfd, void *buf, size_t count) {
         perror("File is not open");
         exit(EXIT_FAILURE);
     }
-    char* buffer = malloc(count);
+    char* buffer = malloc(count+1);
     for (size_t i = 0; i < count; i++)
     {
         buffer[i] = readbyte(myfd, openfiles[myfd].pos);
         openfiles[myfd].pos++;
     }
-    memcpy(buf, buffer, count);
+    buffer[count] = '\0';
+    strncpy(buf, buffer, count);
     free(buffer);
+    
 
     return openfiles[myfd].pos;
     
