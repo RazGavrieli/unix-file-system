@@ -4,11 +4,11 @@
 
 int main(int argc, char const *argv[])
 {
-    printf("cerating..\n");
+    printf("creating root..\n");
     mymkfs(100000); 
+    // ############### test1: open the same directory ###############
     int t1 = myopendir("root/test1");
     int t2 = myopendir("root/test1");
-
     int t = (t1 == t2);
     if(t == 1)
     {
@@ -19,6 +19,10 @@ int main(int argc, char const *argv[])
 
 
     myopendir("root/test2");
+
+    // ############### test2: open the same file with myopen ###############
+
+
     int fd = myopen("root/test1/file1", 0);
     int testfd = myopen("root/test1/file1", 0);
     int fd2 = myopen("root/test2/file2",0);
@@ -31,6 +35,20 @@ int main(int argc, char const *argv[])
     }else{
         printf("myopen test FAILED\n");
     }
+    // ############### test3: open the same file in different directories ###############
+
+    i = (fd2 == fd3);
+    if(i == 1)
+    {
+        printf("different directory open file PASSED\n");
+    }else{
+        printf("different directory open file FAILED\n");
+    }
+
+
+
+    // ############### test4: closing file changing fd ###############
+
     testfd = myclose(testfd);
 
     i = (fd != testfd);
@@ -41,13 +59,7 @@ int main(int argc, char const *argv[])
         printf("myclose test FAILED\n");
     }
 
-    i = (fd2 == fd3);
-    if(i == 1)
-    {
-        printf("different directory open file PASSED\n");
-    }else{
-        printf("different directory open file FAILED\n");
-    }
+    // ############### test5: write, read and seek operation on files ###############
 
     char* test = "this is a test\n"; 
 
@@ -76,21 +88,33 @@ int main(int argc, char const *argv[])
     {
         printf("seek test FAILED\n\n");
     }
-    test ="";
-    for(int i=0; i< 600;i++)
-    {
-        test=strcat(test,"$");
-    }
-    int newfd = myopen("root/test1/bigfile", 0);
-    char bigbuf[700];
-    mywrite(newfd,test,700);
 
+    // ############### test6: testing write big file ###############
+
+    char* test2 = "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$test";
+    int newfd = myopen("root/test1/bigfile", 0);
+
+    char bigbuf[10];
+    mywrite(newfd,test2,607);
+    mylseek(newfd,-8,SEEK_CUR);
+    myread(newfd,bigbuf,4);
+    printf("read from big file: %s\n", bigbuf);
+    // printfd(newfd);
+    if(strcmp(bigbuf, "test") ==0)
+    {
+        printf("seek test big file PASSED\n\n");
+    }else
+    {
+        printf("seek test big file FAILED\n\n");
+    }
+    
+    
 
     printf("our fs looks like this:\n\n");
     printdir("root");
     printdir("test1");
     printdir("test2");
 
-    myclose(fd);
+   
     return 0;
 }
