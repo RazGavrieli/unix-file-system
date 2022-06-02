@@ -243,6 +243,15 @@ char readbyte(int fd, int pos) {
      * The function calculates the correct relevant block (rb) that is needed to be accessed. 
      * The single byte is @return 'ed.
      */
+    // int rb = inodes[fd].next;
+    // while (pos>=BLOCK_SIZE) {
+    //     pos-=BLOCK_SIZE;
+    //     // rb = disk_blocks[rb].next;
+    //     if (rb==-2||rb==-1) {
+    //         perror("ERROR");
+    //         exit(EXIT_FAILURE);
+    //     }
+    // }
     int rb = inodes[fd].next; // the next inode index for the file
     if (pos>=BLOCK_SIZE) {
         rb = find_empty_block();
