@@ -76,6 +76,15 @@ int main(int argc, char const *argv[])
     {
         printf("seek test FAILED\n\n");
     }
+    test ="";
+    for(int i=0; i< 600;i++)
+    {
+        test=strcat(test,"$");
+    }
+    int newfd = myopen("root/test1/bigfile", 0);
+    char bigbuf[700];
+    mywrite(newfd,test,700);
+
 
     printf("our fs looks like this:\n\n");
     printdir("root");
