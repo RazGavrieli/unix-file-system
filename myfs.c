@@ -93,6 +93,11 @@ void resync(const char* target) {
 
 }
 
+void destroyfs() {
+    free(inodes);
+    free(disk_blocks);
+}
+
 void printfs_dsk(char* target) {
     /**
      * @brief Function used for debugging, print information about the UFS from a file on the disk.

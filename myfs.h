@@ -55,6 +55,8 @@ void createroot();
 void sync(const char*); 
 // read an fs from a given file and load it into the memory
 void resync(const char* );
+// free the relevant memory
+void destroyfs();
 // prints the fs from the disk (from a given file name)
 void printfs_dsk(char*); 
 // printfs the fs from the memory

@@ -1,8 +1,13 @@
+#pragma once
+
 #include "myfs.h"
 #include <stdlib.h>
+#include <stdarg.h>
+
 
 typedef struct myFILE {
 	char* data;
+	char mode[3];
 	int fd;
 	int size;
 	int ptr;

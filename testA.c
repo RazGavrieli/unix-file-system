@@ -13,9 +13,10 @@ void green() {
 void white() {
     printf("\033[1;0m");
 }
-
+ 
 int main(int argc, char const *argv[])
 {
+
     printf("creating root..\n");
     mymkfs(10000); 
     // ############### test1: open the same directory ###############

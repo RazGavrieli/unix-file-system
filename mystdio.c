@@ -13,22 +13,42 @@ myFILE* myfopen(const char *pathname, const char *mode) {
      * then read all of the file's data into myFILE. The data is stored on the heap for quick accsess. 
      * 
      */
-    int fd = myopen(pathname, mode);
+    if (!mode) {
+        perror("a mode has to be specified");
+        exit(EXIT_FAILURE);   
+    }
+    if ((strcmp(mode, "a")&&strcmp(mode, "w")&&strcmp(mode, "r")&&strcmp(mode, "r+"))) {
+        perror("the asked mode is not available, use 'a', 'w', 'r' or 'r+'");
+        exit(EXIT_FAILURE);
+    }
+    int fd = myopen(pathname, 0);
     if (fd==-1) {
         perror("error fd is -1");
         exit(EXIT_FAILURE);
     }
     
     myFILE* currfile = (myFILE*)malloc(sizeof(myFILE));
+    strcpy(currfile->mode, mode);
     currfile->fd = fd;
-    currfile->ptr = 0;
+    if (!strcmp(mode, "a")) { // set the pointer to the end of the file
+        currfile->ptr = inodes[fd].size;
+    } else {
+        currfile->ptr = 0;
+    }
     currfile->size = inodes[fd].size;
     currfile->data = malloc(currfile->size);
-    for (size_t i = 0; i < currfile->size; i++)
-    {
-        currfile->data[i] = readbyte(fd, i);
+    if (!strcmp(mode, "w")) { // wipe the content of the file 
+        for (size_t i = 0; i < currfile->size; i++)
+        {
+            currfile->data[i] = ' ';
+        }
+        currfile->data[currfile->size] = '\0';
+    } else {
+        for (size_t i = 0; i < currfile->size; i++)
+        {
+            currfile->data[i] = readbyte(fd, i);
+        }
     }
-        
     myclose(fd);
     return currfile;
 }
@@ -37,6 +57,12 @@ int myfclose(myFILE *stream) {
      * @brief Copies each byte of data from @param stream into the file itself,
      *  Then, free the @struct myFILE. 
      */
+    if (!strcmp(stream->mode, "r")) {
+        free(stream->data);
+        free(stream);
+        return 1;
+    }
+    
     for (size_t i = 0; i < stream->size; i++)
     {
         writebyte(stream->fd, i, stream->data[i]);
@@ -44,6 +70,7 @@ int myfclose(myFILE *stream) {
     
     free(stream->data);
     free(stream);
+    return 1;
 }
 size_t myfread(void * ptr, size_t size, size_t nmemb, myFILE * stream) { 
     /**
@@ -51,19 +78,20 @@ size_t myfread(void * ptr, size_t size, size_t nmemb, myFILE * stream) {
      * each @param size bytes long, from the stream pointed to by @param stream, storing them at the location given by @param ptr.
      * @return the actual position of the current myFILE ptr index.
      */
-
     int count = size*nmemb;
     char* buffer = malloc(count+1);
     size_t i;
+    int optr = stream->ptr;
     for (i = 0; i < count; i++)
     {
         if (stream->ptr+i>stream->size) {
             break;
         }
         buffer[i] = stream->data[stream->ptr+i];
-        stream->ptr++;
+        optr++;
     }
-    buffer[i+1] = '\0';
+    stream->ptr = optr;
+    buffer[count] = '\0';
     strncpy(ptr, buffer, count);
     free(buffer);
 
@@ -76,6 +104,10 @@ size_t myfwrite(const void * ptr, size_t size, size_t nmemb, myFILE * stream) {
      * each @param size bytes long, to the stream pointed to by @param stream, obtaining them from the location given by @param ptr.
      * @return the actual position of the current myFILE ptr index.
      */
+    if (!strcmp(stream->mode, "r")) {
+        perror("you cant write into a file opened for read-only");
+        exit(EXIT_FAILURE);
+    }
     int count = size*nmemb;
     char* buffer = (char*)ptr;
     if (stream->ptr+count>stream->size) {
@@ -92,11 +124,13 @@ size_t myfwrite(const void * ptr, size_t size, size_t nmemb, myFILE * stream) {
         }
         free(tempbuffer);
     }
+    int optr = stream->ptr;
     for (size_t i = 0; i < count; i++)
     {
         stream->data[stream->ptr+i] = buffer[i];
-        stream->ptr++;
+        optr++;
     }
+    stream->ptr = optr;
     return stream->ptr;
 }
 int myfseek(myFILE *stream, long offset, int whence) {
@@ -116,5 +150,74 @@ int myfseek(myFILE *stream, long offset, int whence) {
     }
     return stream->ptr;
 }
-int myfscanf(myFILE * stream, const char * format, ...);
-int myfprintf(myFILE * stream, const char * format, ...);
+int myfscanf(myFILE * stream, const char * format, ...) {
+    /**
+     * @brief This function uses a va list format to read data from the file stream
+     */
+    va_list arguments;
+    va_start ( arguments, format );
+    char buffer[strlen(format)+5000];
+    char currbuffer[500];
+    int optr = stream->ptr;
+    int i = 0;
+    stream->ptr = 0;
+    for (; stream->ptr < stream->size; stream->ptr++)
+    {
+        printf("here\n");
+        if (i>strlen(format)) {
+            break;
+        }
+        if (format[i]=='%') {
+            if (format[i+1]=='d') {
+                int* currvar = va_arg ( arguments, int* );
+                myfread(currvar, 1, 1, stream);
+                stream->ptr--;
+            } else if (format[i+1]=='f') {
+                double* currvar = va_arg ( arguments, double* );
+                myfread(currvar, 1, 1, stream);
+                stream->ptr--;
+            } else if (format[i+1]=='c') {
+                char currvar = va_arg ( arguments, int );
+                myfread(currvar, 1, 1, stream);
+                stream->ptr--;
+            } 
+            i++;
+        } 
+    }
+    stream->ptr = optr;
+}
+int myfprintf(myFILE * stream, const char * format, ...) {
+    /**
+     * @brief This function uses a va list format to write data into the file stream
+     */
+    va_list arguments;
+    va_start ( arguments, format );
+    char buffer[strlen(format)+5000];
+    char currbuffer[500];
+    int j; // buffer's index
+    for (size_t i = 0; i < strlen(format); i++)
+    {
+        if (format[i]=='%') {
+            if (format[i+1]=='d') {
+                int currvar = va_arg ( arguments, int );
+                sprintf(currbuffer,"%d",currvar);
+            } else if (format[i+1]=='f') {
+                double currvar = va_arg ( arguments, double );
+                sprintf(currbuffer,"%f",currvar);
+            } else if (format[i+1]=='c') {
+                char currvar = va_arg ( arguments, int );
+                sprintf(currbuffer,"%c",currvar);
+            } 
+            i++;
+        } else {
+            sprintf(currbuffer,"%c",format[i]);
+        }
+        for (size_t k = 0; k < strlen(currbuffer); k++)
+        {
+            buffer[j] = currbuffer[k];
+            j++;
+        }
+    }
+    buffer[j] = '\0';
+    myfwrite(buffer, strlen(buffer), 1, stream);
+}
