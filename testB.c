@@ -64,7 +64,7 @@ int main(int argc, char const *argv[])
     white();
     // ############### test3: myflseek ###############
     myfseek(fptr1, strlen(test2)-4, SEEK_SET);
-    char* testres2[6];
+    char *testres2 = malloc(6);
     myfread(testres2,1,4, fptr1);
     if(strcmp("test", testres2) == 0)
     {
@@ -87,6 +87,7 @@ int main(int argc, char const *argv[])
         red();
         printf("myfseek END FAILED\n");
     }
+    free(testres2);
     white();
     myfclose(fptr1);
 
