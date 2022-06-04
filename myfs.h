@@ -1,24 +1,26 @@
+#pragma once
+
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #define BLOCK_SIZE 512
 #define NAME_SIZE 8
 #define MAX_DIR_SIZE 10
 #define MAX_FILES 10000
 
-#define SEEK_SET 0
-#define SEEK_END 1
-#define SEEK_CUR 2
+// #define SEEK_SET 0
+// #define SEEK_END 1
+// #define SEEK_CUR 2
 
 struct myopenfile {
     int fd;
     int pos; 
 };
-struct myopenfile openfiles[MAX_FILES];
 
 struct super_block {
     int inodes;
     int blocks;
-    // int size_blocks; = BLOCK_SIZE?
 };
 
 
@@ -36,10 +38,14 @@ struct inode {
 };
 
 struct mydirent { 
-    // hold a list of FDs and names for all the files in the directory
     int size;
     int fds[MAX_DIR_SIZE];
 };
+
+struct myopenfile openfiles[MAX_FILES];
+struct super_block super_block;
+struct inode *inodes;
+struct disk_block *disk_blocks;
 
 // creates a new fs with the given size
 void mymkfs(int); 
@@ -63,7 +69,8 @@ char readbyte(int, int);
 void printfd(int); 
 // print all the files and directories that are inside a given dir path
 void printdir(const char*);
-
+// creates a file at the given path with the given name, assign it one block
+int mycreatefile(const char *path, const char* name);
 
 
 // copy source ufs to target ufs, keep in mind that one of them can be NULL and the function will only load or sync.

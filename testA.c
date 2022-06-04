@@ -30,8 +30,6 @@ int main(int argc, char const *argv[])
         red();
         printf("myopendir test FAILED\n");
     }
-
-
     myopendir("root/test2");
 
     // ############### test2: open the same file with myopen ###############
@@ -140,6 +138,7 @@ int main(int argc, char const *argv[])
     printdir("test1");
     printdir("test2");
 
+    mymount(NULL, "testfile.txt", NULL,NULL,NULL);
    
     return 0;
 }

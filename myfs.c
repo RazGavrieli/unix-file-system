@@ -1,13 +1,11 @@
 #include "myfs.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 
 int virtual_disk_size;
 
-struct super_block super_block;
-struct inode *inodes;
-struct disk_block *disk_blocks;
+// struct super_block super_block;
+// struct inode *inodes;
+// struct disk_block *disk_blocks;
 
 void mymkfs(int s) {
     /**
@@ -136,7 +134,7 @@ void printfs_mem() {
     printf("\nINODES\n");
     for (size_t i = 0; i < super_block.inodes; i++)
     {
-        printf("%ld.\t name: %s | isdir: %d | next: %d\n",i , inodes[i].name, inodes[i].dir, inodes[i].next);
+        printf("%ld.\t name: %s | isdir: %d | next: %d | size: %d\n",i , inodes[i].name, inodes[i].dir, inodes[i].next, inodes[i].size);
     }
 
     printf("\nBLOCKS\n");
@@ -218,13 +216,14 @@ int allocate_file(int size, const char* name) {
     return inode; 
 }
 
-void writebyte(int fd, int pos, char data) { 
+void writebyte(int fd, int opos, char data) { 
     /**
      * @brief Write a SINGLE byte into a disk block. 
      * The function calculates the correct relevant block (rb) that is needed to be accessed. 
      * if the position that is needed to be wrriten is out of the bounds of the file,
      * allocate a new disk block for it. 
      */
+    int pos = opos;
     int rb = inodes[fd].next;
     while (pos>=BLOCK_SIZE) {
         pos-=BLOCK_SIZE;
@@ -238,6 +237,9 @@ void writebyte(int fd, int pos, char data) {
         } else {
             rb = disk_blocks[rb].next;
         }
+    }
+    if (opos>inodes[fd].size) {
+        inodes[fd].size = opos+1;
     }
     disk_blocks[rb].data[pos] = data;
 }
@@ -327,7 +329,7 @@ int mycreatefile(const char *path, const char* name) {
      * @brief Creates a new file at the given path with the given name.
      * Assign a single block for it. 
      */
-    int newfd = allocate_file(BLOCK_SIZE-50, name);
+    int newfd = allocate_file(1, name);
     int dirfd = myopendir(path);
     struct mydirent *currdir = myreaddir(dirfd);
     currdir->fds[currdir->size++] = newfd;
@@ -343,7 +345,7 @@ int myopen(const char *pathname, int flags) {
     strcpy(str, pathname);
     char *token;
     const char s[2] = "/";
-    token = strtok(str, s); // may not work with const 
+    token = strtok(str, s); 
     char currpath[NAME_SIZE] = "";
     char lastpath[NAME_SIZE] = "";
     while(token != NULL ) {          
@@ -432,7 +434,7 @@ size_t mywrite(int myfd, const void *buf, size_t count) {
 }
 int mylseek(int myfd, int offset, int whence) {
     /**
-     * @brief This function is used to move the file pointer. 
+     * @brief This function is used to move the file pointer, @return the new location of the pointer.
      * 
      */
     if (openfiles[myfd].fd != myfd) {
@@ -441,7 +443,6 @@ int mylseek(int myfd, int offset, int whence) {
     }
     if (whence==SEEK_CUR) {
         openfiles[myfd].pos += offset;
-
     } else if (whence==SEEK_END) {
         openfiles[myfd].pos = inodes[myfd].size+offset;
     } else if (whence==SEEK_SET) {
