@@ -40,6 +40,7 @@ struct inode {
 struct mydirent { 
     int size;
     int fds[MAX_DIR_SIZE];
+    char d_name[NAME_SIZE];
 };
 
 extern struct myopenfile openfiles[MAX_FILES];

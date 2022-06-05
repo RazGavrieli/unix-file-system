@@ -54,6 +54,7 @@ void createroot() {
     {
         rootdir->fds[i] = -1;        
     }
+    strcpy(rootdir->d_name, "root");
     rootdir->size = 0;
     char* rootdiraschar = (char*)rootdir;
     for (size_t i = 0; i < sizeof(struct mydirent); i++)
@@ -493,7 +494,7 @@ int mymkdir(const char *path, const char* name) {
     {
         writebyte(newdirfd, i, newdiraschar[i]);        
     }
-    
+    strcpy(newdir->d_name, name);
     return newdirfd;
 }
 
