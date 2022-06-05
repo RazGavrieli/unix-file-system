@@ -1,4 +1,4 @@
-CC=gcc -fPIC -g 
+CC=gcc -fPIC -g -w
 
 all: libmyfs.so libmylibc.so testA testB
 

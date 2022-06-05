@@ -156,35 +156,26 @@ int myfscanf(myFILE * stream, const char * format, ...) {
      */
     va_list arguments;
     va_start ( arguments, format );
-    char buffer[strlen(format)+5000];
-    char currbuffer[500];
-    int optr = stream->ptr;
-    int i = 0;
-    stream->ptr = 0;
-    for (; stream->ptr < stream->size; stream->ptr++)
-    {
-        printf("here\n");
-        if (i>strlen(format)) {
-            break;
-        }
-        if (format[i]=='%') {
+    char* currbuffer; // used to store numbers 
+    int i = 0, j = 0; // format index, strean->data index
+    while (format && format[i]) {
+        if (format[i] == '%') {
             if (format[i+1]=='d') {
-                int* currvar = va_arg ( arguments, int* );
-                myfread(currvar, 1, 1, stream);
-                stream->ptr--;
+                *(int *)va_arg( arguments, int* ) = strtol(&stream->data[j], &currbuffer, 10);
+
+                j+=strlen(currbuffer) - stream->size;
             } else if (format[i+1]=='f') {
-                double* currvar = va_arg ( arguments, double* );
-                myfread(currvar, 1, 1, stream);
-                stream->ptr--;
+                *(double *)va_arg( arguments, double* ) = strtol(&stream->data[j], &currbuffer, 10);
+                j+=strlen(currbuffer) - stream->size;
             } else if (format[i+1]=='c') {
-                char currvar = va_arg ( arguments, int );
-                myfread(currvar, 1, 1, stream);
-                stream->ptr--;
+                *(char *)va_arg( arguments, char* ) = stream->data[j];
             } 
             i++;
-        } 
+        }
+        i++;
+        j++;
     }
-    stream->ptr = optr;
+    return 1;
 }
 int myfprintf(myFILE * stream, const char * format, ...) {
     /**
@@ -195,6 +186,7 @@ int myfprintf(myFILE * stream, const char * format, ...) {
     char buffer[strlen(format)+5000];
     char currbuffer[500];
     int j; // buffer's index
+    
     for (size_t i = 0; i < strlen(format); i++)
     {
         if (format[i]=='%') {
@@ -220,4 +212,6 @@ int myfprintf(myFILE * stream, const char * format, ...) {
     }
     buffer[j] = '\0';
     myfwrite(buffer, strlen(buffer), 1, stream);
+    return 1;
 }
+

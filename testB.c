@@ -136,6 +136,21 @@ int main(int argc, char const *argv[])
         printf("myfprintf FAILED\n%s == %s\n", "this 222222 was an int and this is a char", fptr6->data);
     }
     white();
+
+    // ############### test7: myfscanf  ###############
+    int x; 
+    char a;
+    myfscanf(fptr6, "this %d was an int and this is %c char", &x, &a);
+    if(x==222222&&a=='a')
+    {
+        green();
+        printf("myfscanf  PASSED\n");
+    }else
+    {
+        red();
+        printf("myfscanf FAILED\n%d == %d\n%c == %c\n", x, 222222, a, 'a');
+    }
+    myfclose(fptr6);
     destroyfs();
     return 0;
 }
