@@ -1,5 +1,6 @@
 CC=gcc -fPIC -g -w
 
+
 all: libmyfs.so libmylibc.so testA testB
 
 libmyfs.so: myfs.o
@@ -8,11 +9,11 @@ libmyfs.so: myfs.o
 libmylibc.so: myfs.o mystdio.o
 	$(CC) --shared -fPIC -g -pthread myfs.o mystdio.o -o libmylibc.so
 
-myfs.o: myfs.c
-	$(CC) myfs.c -c 
+myfs.o: sources/myfs.c
+	$(CC) sources/myfs.c -c 
 
-mystdio.o: mystdio.c
-	$(CC) mystdio.c -c 
+mystdio.o: sources/mystdio.c
+	$(CC) sources/mystdio.c -c 
 
 
 testA: libmyfs.so testA.o
@@ -27,7 +28,5 @@ testB: libmyfs.so testB.o
 testB.o: testB.c
 	$(CC) testB.c -c
 
-
-
 clean: 
-	rm -f *.so *.o testA a.out testB
+	rm -f *.so *.o testA a.out testB testfile.txt
