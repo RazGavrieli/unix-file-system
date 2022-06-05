@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-
 typedef struct myFILE {
 	char* data;
 	char mode[3];
@@ -15,7 +14,6 @@ typedef struct myFILE {
 
 
 
-//wtf:
 myFILE* myfopen(const char *pathname, const char *mode);
 int myfclose(myFILE *stream);
 size_t myfread(void * ptr, size_t size, size_t nmemb, myFILE * stream);

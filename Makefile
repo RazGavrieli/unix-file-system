@@ -1,7 +1,7 @@
 CC=gcc -fPIC -g -w
 
 
-all: libmyfs.so libmylibc.so testA testB
+all: libmyfs.so libmylibc.so testA testB errnoBonus
 
 libmyfs.so: myfs.o
 	$(CC) --shared -fPIC -g -pthread myfs.o -o libmyfs.so
@@ -27,5 +27,11 @@ testB: libmylibc.so testB.o
 testB.o: testB.c
 	$(CC) testB.c -c
 
+errnoBonus: libmylibc.so errnoshowcase.o
+	$(CC) errnoshowcase.o ./libmylibc.so -o errnoBonus
+
+errnoshowcase.o: errnoshowcase.c
+	$(CC) errnoshowcase.c -c
+
 clean: 
-	rm -f *.so *.o testA a.out testB testfile.txt
+	rm -f *.so *.o testA a.out testB testfile.txt errnoBonus

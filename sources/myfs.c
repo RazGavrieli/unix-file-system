@@ -45,8 +45,8 @@ void createroot() {
      */
     int zerofd = allocate_file(sizeof(struct mydirent),  "root");
     if (zerofd != 0 ) {
-        perror("root couldn't initialize at zero");
-        exit(EXIT_FAILURE);
+        errno = 131;
+        return -1;
     }
     inodes[zerofd].dir = 1;
     struct mydirent* rootdir = malloc(sizeof(struct mydirent));
@@ -182,18 +182,18 @@ int allocate_file(int size, const char* name) {
      * 
      */
     if (strlen(name)>7) {
-        perror("name of file too long\n");
-        exit(EXIT_FAILURE);
+        errno = 36;
+        return -1;
     }
     int inode = find_empty_inode();
     if (inode == -1) {
-        perror("no empty inode\n");
-        exit(EXIT_FAILURE);
+        errno = 28;
+        return -1;
     }
     int curr_block = find_empty_block();
     if (curr_block == -1) {
-        perror("no empty blocks\n");
-        exit(EXIT_FAILURE);
+        errno = 28;
+        return -1;
     }
     inodes[inode].size = size;
     inodes[inode].next = curr_block;
@@ -207,8 +207,8 @@ int allocate_file(int size, const char* name) {
         {
             next_block = find_empty_block();
             if (next_block == -1) {
-                perror("no empty blocks\n");
-                exit(EXIT_FAILURE);
+                errno = 28;
+                return -1;
             }
             disk_blocks[curr_block].next = next_block;
             curr_block = next_block;
@@ -232,8 +232,8 @@ void writebyte(int fd, int opos, char data) {
     while (pos>=BLOCK_SIZE) {
         pos-=BLOCK_SIZE;
         if (disk_blocks[rb].next==-1) {
-            perror("ERROR");
-            exit(EXIT_FAILURE);
+            errno = 131;
+            return -1;
         } else if (disk_blocks[rb].next == -2) { // the current block is the last block, so we allocate a new block
             disk_blocks[rb].next = find_empty_block(); 
             rb = disk_blocks[rb].next;
@@ -259,11 +259,11 @@ char readbyte(int fd, int pos) {
         pos-=BLOCK_SIZE;
         rb = disk_blocks[rb].next;
         if (rb==-1) {
-            perror("ERROR");
-            exit(EXIT_FAILURE);
+            errno = 131;
+            return -1;
         } else if (rb == -2) {
-            perror("attempting to read out of file bounds");
-            exit(EXIT_FAILURE);
+            errno = 13;
+            return -1;
         }
     }
     return disk_blocks[rb].data[pos];
@@ -275,16 +275,16 @@ void printfd(int fd){
      */
     if(openfiles[fd].fd == -1)
     {
-        perror("segmentation error");
-        exit(EXIT_FAILURE);
+        errno = 13;
+        return -1;
     }
     int rb = inodes[fd].next;
     printf("NAME: %s\n", inodes[fd].name);
     
     while(rb!=-2) {
         if (rb==-1) {
-            perror("fatal error got into an unallocated disk block\n");
-            exit(EXIT_FAILURE);
+            errno = 131;
+            return -1;
         }
         printf("%s", disk_blocks[rb].data);
 
@@ -300,8 +300,8 @@ void printdir(const char* pathname) {
      */
     int fd = myopendir(pathname);
     if (inodes[fd].dir==0) {
-        perror("given path is not a dir!");
-        exit(EXIT_FAILURE);
+        errno = 20;
+        return -1;
     }
     printf("NAME OF DIRECTORY: %s\n", inodes[fd].name);
     struct mydirent* currdir = (struct mydirent*)disk_blocks[inodes[fd].next].data;
@@ -320,8 +320,8 @@ int mymount(const char *source, const char *target, const char *filesystemtype, 
      * 
      */
     if (source==NULL&&target==NULL) {
-        perror("bad use of 'mymount', please specify AT LEAST one of the pair: target or source");
-        exit(EXIT_FAILURE);
+        errno = 22;
+        return -1;
     }
     if (source!=NULL)
         {resync(source);}
@@ -363,8 +363,8 @@ int myopen(const char *pathname, int flags) {
     {
         if (!strcmp(inodes[i].name, currpath)) {
             if (inodes[i].dir!=0) {
-                perror("the given path is a directory and can't be opened like a file!");
-                exit(EXIT_FAILURE);
+                errno = 21;
+                return -1;
             }
             openfiles[i].fd = i;
             openfiles[i].pos = 0;
@@ -381,6 +381,7 @@ int myclose(int myfd) {
      * @brief Removes the file from openfiles array
      * 
      */
+    
     openfiles[myfd].fd = -1;
     openfiles[myfd].pos = -1;
 }
@@ -392,12 +393,12 @@ size_t myread(int myfd, void *buf, size_t count) {
      * 
      */
     if (inodes[myfd].dir==1) {
-        perror("cant read a directory like a file");
-        exit(EXIT_FAILURE);
+        errno = 21;
+        return -1;
     }
     if (openfiles[myfd].fd != myfd) { 
-        perror("File is not open");
-        exit(EXIT_FAILURE);
+        errno = 77;
+        return -1;
     }
     char* buffer = malloc(count+1);
     for (size_t i = 0; i < count; i++)
@@ -421,12 +422,12 @@ size_t mywrite(int myfd, const void *buf, size_t count) {
      * 
      */
     if (inodes[myfd].dir==1) {
-        perror("cant write into a directory like a file");
-        exit(EXIT_FAILURE);
+        errno = 21;
+        return -1;
     }
     if (openfiles[myfd].fd != myfd) { 
-        perror("File is not open");
-        exit(EXIT_FAILURE);
+        errno = 77;
+        return -1;
     }
     char* buffer = (char*)buf;
     for (size_t i = 0; i < count; i++)
@@ -442,8 +443,8 @@ int mylseek(int myfd, int offset, int whence) {
      * 
      */
     if (openfiles[myfd].fd != myfd) {
-        perror("file is not opened");
-        exit(EXIT_FAILURE);
+        errno = 77;
+        return -1;
     }
     if (whence==SEEK_CUR) {
         openfiles[myfd].pos += offset;
@@ -465,18 +466,18 @@ int mymkdir(const char *path, const char* name) {
      */
     int fd = myopendir(path);
     if (fd==-1) {
-        perror("couldnt find dir");
-        exit(EXIT_FAILURE);
+        errno = 2;
+        return -1;
     }
     if (inodes[fd].dir!=1) {
-        perror("can't open a new directory inside a file");
-        exit(EXIT_FAILURE);
+        errno = 20;
+        return -1;
     }
     int dirblock = inodes[fd].next;
     struct mydirent* currdir = (struct mydirent*)disk_blocks[dirblock].data;
     if (currdir->size>=MAX_DIR_SIZE) {
-        perror("too many directories in this directory");
-        exit(EXIT_FAILURE);  
+        errno = 31;
+        return -1;  
     }
     int newdirfd = allocate_file(sizeof(struct mydirent), name);
     currdir->fds[currdir->size++] = newdirfd;
@@ -523,8 +524,8 @@ int myopendir(const char *pathname) {
     {
         if (!strcmp(inodes[i].name, currpath)) {
             if (inodes[i].dir!=1) {
-                perror("the given path is a file and can't be opened like a directory!");
-                exit(EXIT_FAILURE);
+                errno = 20;
+                return -1;
             }
             return i; 
         }
@@ -539,14 +540,14 @@ struct mydirent *myreaddir(int fd) {
      * 
      */
     if (inodes[fd].dir!=1) {
-        perror("given fd is not a directory");
-        exit(EXIT_FAILURE);
+        errno = 20;
+        return -1;
     }
     return (struct mydirent*)disk_blocks[inodes[fd].next].data;
 }
 
 int myclosedir(int fd) {
     /** Raise error as it was not implemented in this file system. */
-    perror("was not implemented, not relevant in my implementation method of ufs");
+    perror("was not implemented, not relevant in my implementation method of ufs.\nDirectories are not saved on ''myopenfiles'' list\n");
     exit(EXIT_FAILURE);
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #define BLOCK_SIZE 512
 #define NAME_SIZE 8

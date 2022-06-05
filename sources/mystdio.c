@@ -14,17 +14,16 @@ myFILE* myfopen(const char *pathname, const char *mode) {
      * 
      */
     if (!mode) {
-        perror("a mode has to be specified");
-        exit(EXIT_FAILURE);   
+        errno = 22;
+        return -1; 
     }
     if ((strcmp(mode, "a")&&strcmp(mode, "w")&&strcmp(mode, "r")&&strcmp(mode, "r+"))) {
-        perror("the asked mode is not available, use 'a', 'w', 'r' or 'r+'");
-        exit(EXIT_FAILURE);
+        errno = 22;
+        return -1; 
     }
     int fd = myopen(pathname, 0);
     if (fd==-1) {
-        perror("error fd is -1");
-        exit(EXIT_FAILURE);
+        return -1;
     }
     
     myFILE* currfile = (myFILE*)malloc(sizeof(myFILE));
@@ -105,8 +104,8 @@ size_t myfwrite(const void * ptr, size_t size, size_t nmemb, myFILE * stream) {
      * @return the actual position of the current myFILE ptr index.
      */
     if (!strcmp(stream->mode, "r")) {
-        perror("you cant write into a file opened for read-only");
-        exit(EXIT_FAILURE);
+        errno = 30;
+        return -1;
     }
     int count = size*nmemb;
     char* buffer = (char*)ptr;
