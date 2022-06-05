@@ -1,18 +1,16 @@
 #include "myfs.h"
 
 
-int virtual_disk_size;
-
-// struct super_block super_block;
-// struct inode *inodes;
-// struct disk_block *disk_blocks;
+struct myopenfile openfiles[MAX_FILES];
+struct super_block super_block;
+struct inode *inodes;
+struct disk_block *disk_blocks;
 
 void mymkfs(int s) {
     /**
      * @brief Load into the memory a fresh 'install' of a ufs. (UNIX FILE SYSTEM)
      * The install will only include a root directory
      */
-    virtual_disk_size = s;
     int size_without_superblock = s - sizeof(struct super_block);
 
     super_block.inodes = (size_without_superblock/10)/(sizeof(struct inode)); 

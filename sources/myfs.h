@@ -42,10 +42,10 @@ struct mydirent {
     int fds[MAX_DIR_SIZE];
 };
 
-struct myopenfile openfiles[MAX_FILES];
-struct super_block super_block;
-struct inode *inodes;
-struct disk_block *disk_blocks;
+extern struct myopenfile openfiles[MAX_FILES];
+extern struct super_block super_block;
+extern struct inode *inodes;
+extern struct disk_block *disk_blocks;
 
 // creates a new fs with the given size
 void mymkfs(int); 

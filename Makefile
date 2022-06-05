@@ -15,14 +15,13 @@ myfs.o: sources/myfs.c
 mystdio.o: sources/mystdio.c
 	$(CC) sources/mystdio.c -c 
 
-
 testA: libmyfs.so testA.o
 	$(CC) testA.o ./libmyfs.so -o testA
 
 testA.o: testA.c
 	$(CC) testA.c -c
 
-testB: libmyfs.so testB.o
+testB: libmylibc.so testB.o
 	$(CC) testB.o ./libmylibc.so -o testB
 
 testB.o: testB.c
