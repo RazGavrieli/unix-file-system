@@ -5,4 +5,4 @@ To run the tests for part B run 'make testB' and then ./testB <br>
 NOTE THAT TEST B IS DEPENDENT ON TEST A! RUN './testA' FIRST! <br>
 
 ## BONUS
-To check our bonus (errno implementation), after 'make all' run './errnoBonus'. <br>
+To test our bonus (errno implementation), after 'make all' and './testA', run './errnoBonus'. <br>
