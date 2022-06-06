@@ -1,4 +1,5 @@
 #include "mystdio.h"
+#include <math.h>
 /* // for reference:
 typedef struct myFILE {
 	char* data;
@@ -176,32 +177,60 @@ int myfscanf(myFILE * stream, const char * format, ...) {
     }
     return 1;
 }
+
+void reverse(char s[])
+ {
+     int i, j;
+     char c;
+
+     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+         c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+     }
+} 
+ void itoa(int n, char s[])
+ {
+     int i, sign;
+
+     if ((sign = n) < 0)  /* record sign */
+         n = -n;          /* make n positive */
+     i = 0;
+     do {       /* generate digits in reverse order */
+         s[i++] = n % 10 + '0';   /* get next digit */
+     } while ((n /= 10) > 0);     /* delete it */
+     if (sign < 0)
+         s[i++] = '-';
+     s[i] = '\0';
+     reverse(s);
+}  
+
 int myfprintf(myFILE * stream, const char * format, ...) {
     /**
      * @brief This function uses a va list format to write data into the file stream
      */
     va_list arguments;
     va_start ( arguments, format );
-    char buffer[strlen(format)+5000];
-    char currbuffer[500];
-    int j; // buffer's index
-    
+    char *buffer = malloc(strlen(format)+5000);
+    char *currbuffer = malloc(500);
+    int j = 0; // buffer's index
     for (size_t i = 0; i < strlen(format); i++)
     {
+        memset(currbuffer, 0, 500);
         if (format[i]=='%') {
             if (format[i+1]=='d') {
                 int currvar = va_arg ( arguments, int );
-                sprintf(currbuffer,"%d",currvar);
+                itoa(currvar, currbuffer);
             } else if (format[i+1]=='f') {
                 double currvar = va_arg ( arguments, double );
                 sprintf(currbuffer,"%f",currvar);
             } else if (format[i+1]=='c') {
                 char currvar = va_arg ( arguments, int );
-                sprintf(currbuffer,"%c",currvar);
+                currbuffer[0] = currvar;
             } 
             i++;
         } else {
-            sprintf(currbuffer,"%c",format[i]);
+            currbuffer[0] = format[i];
         }
         for (size_t k = 0; k < strlen(currbuffer); k++)
         {
@@ -211,6 +240,7 @@ int myfprintf(myFILE * stream, const char * format, ...) {
     }
     buffer[j] = '\0';
     myfwrite(buffer, strlen(buffer), 1, stream);
+    //free(buffer);
     return 1;
 }
 
