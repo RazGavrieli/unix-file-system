@@ -9,6 +9,7 @@
 #define NAME_SIZE 8
 #define MAX_DIR_SIZE 10
 #define MAX_FILES 10000
+#define O_CREAT 0100
 
 // #define SEEK_SET 0
 // #define SEEK_END 1
@@ -90,13 +91,13 @@ size_t mywrite(int myfd, const void *buf, size_t count);
 // increment the file ptr by offset
 int mylseek(int myfd, int offset, int whence);
 // returns the FD of a given directory, if the dir does not exists at the path it will mymkdir and then return the new fd. 
-int myopendir(const char *name);
+int myopendir(const char *name); // &&&&&&&&&&&&&&&&SHOULD return myDIR*
 // creates a new directory at path with given name
 int mymkdir(const char *path, const char* name);
 // returns the struct mydirent of a given fd (checks first if the fd is of a directory)
-struct mydirent *myreaddir(int fd); 
+struct mydirent *myreaddir(int fd); // &&&&&&&&&&&&&&&&SHOULD BE ANOTHER ONE THAT GET myDIR* dirp
 // not implemented in this implementation of ufs (dirs are opened automatically on demend and are managed by the ufs without permissions to the end user)
-int myclosedir(int fd); 
+int myclosedir(int fd);  // &&&&&&&&&&&&&&&&SHOULE GET  myDIR* dirp
 
 
         // there is going to be a reduction we

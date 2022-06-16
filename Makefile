@@ -34,4 +34,4 @@ errnoshowcase.o: errnoshowcase.c
 	$(CC) errnoshowcase.c -c
 
 clean: 
-	rm -f *.so *.o testA a.out testB testfile.txt errnoBonus
+	rm -f *.so *.o testA a.out testB *.txt errnoBonus

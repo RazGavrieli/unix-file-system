@@ -83,6 +83,9 @@ void resync(const char* target) {
      */
     FILE *file;
     file = fopen(target, "r");
+    if (!file) {
+        return -1;
+    }
     fread(&super_block, sizeof(super_block), 1, file);
     inodes = malloc(super_block.inodes*sizeof(struct inode));
     disk_blocks = malloc(super_block.blocks*sizeof(struct disk_block));
@@ -371,6 +374,10 @@ int myopen(const char *pathname, int flags) {
             return i; 
         }
     }
+    if (flags != O_CREAT) {
+        errno = 2;
+        return -1;
+    }
     int i = mycreatefile(lastpath, currpath); 
     openfiles[i].fd = i;
     openfiles[i].pos = 0;
@@ -537,7 +544,6 @@ int myopendir(const char *pathname) {
 struct mydirent *myreaddir(int fd) {
     /**
      * @brief Uses @param fd to find the asked directory and @return it as a @struct mydirent. 
-     * 
      */
     if (inodes[fd].dir!=1) {
         errno = 20;
