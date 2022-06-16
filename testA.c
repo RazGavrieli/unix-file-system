@@ -20,8 +20,10 @@ int main(int argc, char const *argv[])
     printf("creating root..\n");
     mymkfs(10000); 
     // ############### test1: open the same directory ###############
-    int t1 = myopendir("root/test1");
-    int t2 = myopendir("root/test1");
+    myDIR* dirp1 = myopendir("root/test1");
+    myDIR* dirp2 = myopendir("root/test1");
+    int t1 = dirp1->fd;
+    int t2 = dirp2->fd;
     int t = (t1 == t2);
     if(t == 1)
     {
@@ -31,7 +33,10 @@ int main(int argc, char const *argv[])
         red();
         printf("myopendir test FAILED\n");
     }
-    myopendir("root/test2");
+    myDIR* dirp3 = myopendir("root/test2"); 
+    myclosedir(dirp3);
+    myclosedir(dirp2);
+    myclosedir(dirp1);
 
     // ############### test2: open the same file with myopen ###############
 
@@ -134,12 +139,12 @@ int main(int argc, char const *argv[])
     }
     white();
 
-    printf("our fs looks like this:\n\n");
+    printf("our fs looks like this:\n");
     printdir("root");
     printdir("test1");
     printdir("test2");
 
-    mymount(NULL, "testfile.txt", NULL,NULL,NULL);
+    mymount(NULL, "testfile.txt", NULL,NULL,NULL); // write current file system (that is on the memory) into testfile.txt for future use
    
     return 0;
 }

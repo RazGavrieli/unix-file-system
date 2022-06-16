@@ -17,7 +17,7 @@ void white() {
 
 int main(int argc, char const *argv[])
 {
-    mymount("testfile.txt", NULL, NULL, NULL, NULL);
+    mymount("testfile.txt", NULL, NULL, NULL, NULL); // loads "testfile.txt" to memory
     printfs_mem();
     // ############### test1: myfopen actual data allocation on a small file ###############
 

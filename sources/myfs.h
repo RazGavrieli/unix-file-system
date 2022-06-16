@@ -11,9 +11,9 @@
 #define MAX_FILES 10000
 #define O_CREAT 0100
 
-// #define SEEK_SET 0
-// #define SEEK_END 1
-// #define SEEK_CUR 2
+#define SEEK_SET 0
+#define SEEK_END 1
+#define SEEK_CUR 2
 
 struct myopenfile {
     int fd;
@@ -44,6 +44,10 @@ struct mydirent {
     int fds[MAX_DIR_SIZE];
     char d_name[NAME_SIZE];
 };
+
+typedef struct myDIR { 
+    int fd; 
+}myDIR;
 
 extern struct myopenfile openfiles[MAX_FILES];
 extern struct super_block super_block;
@@ -90,14 +94,14 @@ size_t myread(int myfd, void *buf, size_t count);
 size_t mywrite(int myfd, const void *buf, size_t count);
 // increment the file ptr by offset
 int mylseek(int myfd, int offset, int whence);
-// returns the FD of a given directory, if the dir does not exists at the path it will mymkdir and then return the new fd. 
-int myopendir(const char *name); // &&&&&&&&&&&&&&&&SHOULD return myDIR*
+// returns the FD(INSIDE STRUCT myDIR) of a given directory, if the dir does not exists at the path it will mymkdir and then return the new fd. 
+myDIR* myopendir(const char *name); 
 // creates a new directory at path with given name
 int mymkdir(const char *path, const char* name);
 // returns the struct mydirent of a given fd (checks first if the fd is of a directory)
-struct mydirent *myreaddir(int fd); // &&&&&&&&&&&&&&&&SHOULD BE ANOTHER ONE THAT GET myDIR* dirp
-// not implemented in this implementation of ufs (dirs are opened automatically on demend and are managed by the ufs without permissions to the end user)
-int myclosedir(int fd);  // &&&&&&&&&&&&&&&&SHOULE GET  myDIR* dirp
+struct mydirent *myreaddir(myDIR* dirp); 
+// free dirp pointer memory.
+int myclosedir(myDIR* dirp);  
 
 
         // there is going to be a reduction we

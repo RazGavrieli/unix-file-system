@@ -301,7 +301,8 @@ void printdir(const char* pathname) {
     /**
      * @brief Function used for debugging, print information about a directory with a given apth.
      */
-    int fd = myopendir(pathname);
+    myDIR* dirp = myopendir(pathname);
+    int fd = dirp->fd;
     if (inodes[fd].dir==0) {
         errno = 20;
         return -1;
@@ -312,6 +313,7 @@ void printdir(const char* pathname) {
     {
         printf("file number %ld: %s, ",i, inodes[currdir->fds[i]].name);
     }
+    myclosedir(dirp);
     printf("\nDONE\n");
 }
 
@@ -337,9 +339,10 @@ int mycreatefile(const char *path, const char* name) {
      * Assign a single block for it. 
      */
     int newfd = allocate_file(1, name);
-    int dirfd = myopendir(path);
-    struct mydirent *currdir = myreaddir(dirfd);
+    myDIR* dirp = myopendir(path);
+    struct mydirent *currdir = myreaddir(dirp);
     currdir->fds[currdir->size++] = newfd;
+    myclosedir(dirp);
     return newfd;
 }
 
@@ -471,7 +474,8 @@ int mymkdir(const char *path, const char* name) {
      * @brief This function goes through the path and finds the FD of the last directory in the path. 
      * Then, it creates a new directory inside the FD that was found. 
      */
-    int fd = myopendir(path);
+    myDIR* dirp = myopendir(path);
+    int fd = dirp->fd;
     if (fd==-1) {
         errno = 2;
         return -1;
@@ -503,10 +507,11 @@ int mymkdir(const char *path, const char* name) {
         writebyte(newdirfd, i, newdiraschar[i]);        
     }
     strcpy(newdir->d_name, name);
+    myclosedir(dirp);
     return newdirfd;
 }
 
-int myopendir(const char *pathname) {
+myDIR* myopendir(const char *pathname) {
     /**
      * @brief Goes through the pathname and opens the last directory in the path. 
      * Returns the FD of this directory. 
@@ -534,17 +539,22 @@ int myopendir(const char *pathname) {
                 errno = 20;
                 return -1;
             }
-            return i; 
+            myDIR* newdir = (myDIR*)malloc(sizeof(myDIR));
+            newdir->fd = i;
+            return newdir; 
         }
     }
-    return mymkdir(lastpath, currpath); 
+    myDIR* newdir = (myDIR*)malloc(sizeof(myDIR));
+    newdir->fd = mymkdir(lastpath, currpath); 
+    return newdir;
 }
 
 
-struct mydirent *myreaddir(int fd) {
+struct mydirent *myreaddir(myDIR* dirp) {
     /**
-     * @brief Uses @param fd to find the asked directory and @return it as a @struct mydirent. 
+     * @brief Uses @param dirp to find the asked directory using fd, and @return it as a @struct mydirent. 
      */
+    int fd = dirp->fd;
     if (inodes[fd].dir!=1) {
         errno = 20;
         return -1;
@@ -552,8 +562,8 @@ struct mydirent *myreaddir(int fd) {
     return (struct mydirent*)disk_blocks[inodes[fd].next].data;
 }
 
-int myclosedir(int fd) {
+int myclosedir(myDIR* dirp) {
     /** Raise error as it was not implemented in this file system. */
-    perror("was not implemented, not relevant in my implementation method of ufs.\nDirectories are not saved on ''myopenfiles'' list\n");
-    exit(EXIT_FAILURE);
+    free(dirp);
+
 }
